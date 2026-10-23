@@ -38,6 +38,30 @@
 <script>
 
     let allUsers = JSON.parse(localStorage.getItem('allUsersOct26')) || [] 
+let currentUserIndex = JSON.parse(localStorage.getItem('currentUserIndex'));
+let currentUser = allUsers[currentUserIndex];
+
+if (currentUser) {
+    window.location.replace('dashboard.html');
+}
+
+window.addEventListener('storage', function (event) {
+    if (event.key === 'currentUserIndex') {
+        let updatedUsers =
+            JSON.parse(localStorage.getItem('allUsersOct26')) || [];
+
+        let updatedIndex =
+            JSON.parse(localStorage.getItem('currentUserIndex'));
+
+        let loggedInUser = updatedUsers[updatedIndex];
+
+        if (loggedInUser) {
+            window.location.replace('dashboard.html');
+        }
+    }
+});
+
+
        
 
 function login() {
@@ -67,6 +91,21 @@ if (!foundUser) {
 
         
     }
+
+    // Get all registered users from localStorage
+// let allUsers = JSON.parse(localStorage.getItem('allUsersOct26')) || [];
+
+// Get the index of the currently logged-in user
+
+// Find the currently logged-in user
+
+// If a user is already logged in, go to the dashboard
+// if (currentUser) {
+//     window.location.replace('dashboard.html');
+//}
+
+// Listen for login changes made in another browser tab
+
 
 
 

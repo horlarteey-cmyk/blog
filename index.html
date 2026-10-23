@@ -45,6 +45,28 @@
 
 
 let allUsers = JSON.parse(localStorage.getItem('allUsersOct26')) || []
+let currentUserIndex = JSON.parse(localStorage.getItem('currentUserIndex'));
+let currentUser = allUsers[currentUserIndex];
+
+if (currentUser) {
+    window.location.replace('dashboard.html');
+}
+
+window.addEventListener('storage', function (event) {
+    if (event.key === 'currentUserIndex') {
+        let updatedUsers =
+            JSON.parse(localStorage.getItem('allUsersOct26')) || [];
+
+        let updatedIndex =
+            JSON.parse(localStorage.getItem('currentUserIndex'));
+
+        let loggedInUser = updatedUsers[updatedIndex];
+
+        if (loggedInUser) {
+            window.location.replace('dashboard.html');
+        }
+    }
+});
 
 
 
