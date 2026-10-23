@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dashboard-page">
+
+    <!-- ===== Top bar ===== -->
+    <header class="topbar">
+        <div class="topbar-inner">
+            <a href="dashboard.html" class="brand">
+                <span class="brand-mark">B</span>
+                <span class="brand-name">MyBlog</span>
+            </a>
+
+            <button id="logoutButton" class="btn-logout" onclick="logOut()" type="button">Log Out</button>
+        </div>
+    </header>
+
+    <main class="blog-wrap">
+
+        <!-- ===== Welcome section ===== -->
+        <section class="welcome-card">
+            <div class="avatar" id="userAvatar"></div>
+
+            <div class="welcome-text">
+                <h1 id="welcomeMessage">Welcome back!</h1>
+                <p class="welcome-sub">
+                    You are logged in as
+                    <strong id="userName">loading..</strong>
+                    <span class="dot">&middot;</span>
+                    <span id="userEmail">loading...</span>
+                </p>
+            </div>
+        </section>
+
+        <!-- ===== Create post section ===== -->
+        <section class="card new-post">
+            <h2>Write a new post</h2>
+            <p class="card-sub">Share what is on your mind with everyone.</p>
+
+            <form id="postForm">
+                <label for="postTitle">Title</label>
+                <input type="text" id="postTitle" placeholder="Give your post a title">
+
+                <label for="postContent">Content</label>
+                <textarea id="postContent" rows="5" placeholder="Write your post here..."></textarea>
+
+                <label for="postImages">Add Images</label>
+                <input type="file" id="postImages" accept="image/*" multiple>
+                 <div id="imagePreview"></div>
+
+                <p id="postMessage"></p>
+
+                <div class="form-actions">
+                    <button type="submit" id="publishButton" class="btn-publish">Publish Post</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- ===== Posts feed ===== -->
+        <section class="posts-section">
+            <div class="section-head">
+                <h2>Recent posts</h2>
+                <span class="post-count" id="postCount"></span>
+            </div>
+            
+            
+            <!-- Sample posts for design preview. JS can clear this container and render real posts here. -->
+            <div id="postsContainer" class="posts-list">
+
+                  
+
+            </div>
+            
+
+            <!-- Shown when there are no posts. Give it the class "hidden" to hide it. -->
+            <div id="emptyState" class="empty-state hidden">
+                <p>No posts yet. Be the first to write one!</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="site-footer">
+        <p>&copy; 2026 MyBlog. Built with HTML, CSS and JavaScript.</p>
+    </footer>
+
+</body>
+</html>
+
+
+<script>
+    let allUsers = JSON.parse(localStorage.getItem('allUsersOct26')) || []
+    let currentUserIndex = JSON.parse(localStorage.getItem('currentUserIndex'))
+    let currentUser = allUsers[currentUserIndex]
+
+    function authenticateUser(params) {
+        if (!currentUser) {
+            location.href = 'login.html'
+        } else {
+            userName.innerHTML = currentUser.username
+            userEmail.innerHTML = currentUser.email
+        }
+    }
+
+    authenticateUser()
+
+    function logOut() {
+        let canLogout = confirm('are you sure you want to logout?')
+
+        if (canLogout) {
+            localStorage.removeItem('currentUserIndex')
+            window.location.href = 'login.html'
+        }
+    }
+
+    if (currentUser) {
+
+        const postForm = document.getElementById('postForm')
+        const postTitle = document.getElementById('postTitle')
+        const postContent = document.getElementById('postContent')
+        const postMessage = document.getElementById('postMessage')
+        const postsContainer = document.getElementById('postsContainer')
+        const postCount = document.getElementById('postCount')
+        const emptyState = document.getElementById('emptyState')
+        const postAuthor = document.getElementById('postAuthor')
+        const postImages = document.getElementById('postImages')
+
+        const imagePreview = document.getElementById('imagePreview')
+
+        const postsStorageKey = 'myBlogPosts_' + currentUser.email
+
+        let posts = JSON.parse(localStorage.getItem(postsStorageKey)) || []
+
+        function readFile(file) {
+            return new Promise(function (resolve, reject) {
+
+                const reader = new FileReader()
+
+                reader.onload = function () {
+                    resolve({
+                        name: file.name,
+                        type: file.type,
+                        data: reader.result
+                    })
+                }
+
+                reader.onerror = function () {
+                    reject(new Error('Could not read ' + file.name))
+                }
+
+                reader.readAsDataURL(file)
+            })
+        }
+
+        postImages.addEventListener('change', function () {
+
+            imagePreview.innerHTML = ''
+
+            const selectedImages = postImages.files
+
+            for (let i = 0; i < selectedImages.length; i++) {
+
+                const image = selectedImages[i]
+
+                const previewItem = document.createElement('div')
+                previewItem.className = 'image-preview-item'
+
+                const thumbnail = document.createElement('img')
+                thumbnail.src = URL.createObjectURL(image)
+                thumbnail.alt = image.name
+
+                const fileName = document.createElement('p')
+                fileName.textContent = image.name
+
+                previewItem.appendChild(thumbnail)
+                previewItem.appendChild(fileName)
+
+                imagePreview.appendChild(previewItem)
+            }
+        })
+
+        function displayPosts() {
+
+            postsContainer.innerHTML = ''
+
+            if (posts.length === 1) {
+                postCount.innerHTML = '1 Post'
+            } else if (posts.length === 0) {
+                postCount.innerHTML = '0 Post'
+            } else {
+                postCount.innerHTML = posts.length + ' Posts'
+            }
+
+            if (posts.length === 0) {
+                emptyState.classList.remove('hidden')
+            } else {
+                emptyState.classList.add('hidden')
+            }
+
+            for (let i = posts.length - 1; i >= 0; i--) {
+
+                const postCard = document.createElement('article')
+                postCard.className = 'post'
+
+                const postMeta = document.createElement('div')
+                postMeta.className = 'post-meta'
+
+                const postAvatar = document.createElement('div')
+                postAvatar.className = 'post-avatar'
+
+                postAvatar.textContent =
+                    currentUser.username.charAt(0).toUpperCase()
+
+                const authorDetails = document.createElement('div')
+
+                const postAuthor = document.createElement('p')
+                postAuthor.className = 'post-author'
+                postAuthor.textContent = currentUser.username
+
+                const postDate = document.createElement('p')
+                postDate.className = 'post-date'
+                postDate.textContent = posts[i].date
+
+                const deleteButton = document.createElement('button')
+                deleteButton.textContent = 'Delete'
+                deleteButton.className = 'delete-button'
+                deleteButton.style.background = 'red'
+                deleteButton.style.width = '80px';
+                
+
+
+                deleteButton.addEventListener('click', function () {
+
+                    let confirmDelete = confirm(
+                        'Are you sure you want to delete this post?'
+                    )
+
+                    if (confirmDelete) {
+                        posts.splice(i, 1)
+
+                        localStorage.setItem(
+                            postsStorageKey,
+                            JSON.stringify(posts)
+                        )
+
+                        displayPosts()
+                    }
+                })
+
+                authorDetails.appendChild(postAuthor)
+                authorDetails.appendChild(postDate)
+
+                postMeta.appendChild(postAvatar)
+                postMeta.appendChild(authorDetails)
+
+                const titleElement = document.createElement('h3')
+                titleElement.className = 'post-title'
+                titleElement.textContent = posts[i].title
+
+                const contentElement = document.createElement('p')
+                contentElement.className = 'post-body'
+                contentElement.textContent = posts[i].content
+
+                contentElement.style.whiteSpace = 'pre-wrap'
+
+
+                postCard.appendChild(postMeta)
+                postCard.appendChild(titleElement)
+                postCard.appendChild(contentElement)
+
+                
+                if (posts[i].images && posts[i].images.length > 0) {
+
+                    const postImagesContainer =
+                        document.createElement('div')
+
+                    postImagesContainer.className = 'post-images'
+
+                    for (let j = 0; j < posts[i].images.length; j++) {
+
+                        const image = posts[i].images[j]
+
+                        const postImage = document.createElement('img')
+
+                        postImage.src = image.data
+
+                        postImage.alt = image.name
+
+                        postImagesContainer.appendChild(postImage)
+                    }
+
+                    postCard.appendChild(postImagesContainer)
+                }
+
+                postCard.appendChild(deleteButton)
+
+                postsContainer.appendChild(postCard)
+            }
+        }
+
+        postForm.addEventListener('submit', async function (event) {
+
+            event.preventDefault()
+
+            let title = postTitle.value.trim()
+            let content = postContent.value.trim()
+
+            if (title === '') {
+                postMessage.textContent = 'Please enter a post title.'
+                postMessage.style.color = 'red'
+                postTitle.focus()
+                return
+            }
+
+            if (content === '') {
+                postMessage.textContent = 'Please enter your post content.'
+                postMessage.style.color = 'red'
+                postContent.focus()
+                return
+            }
+
+            const selectedImages = Array.from(postImages.files)
+
+            const invalidImage = selectedImages.some(function (image) {
+                return !image.type.startsWith('image/')
+            })
+
+            if (invalidImage) {
+                postMessage.textContent = 'Please select image files only.'
+                postMessage.style.color = 'red'
+                return
+            }
+
+            let savedImages
+
+            try {
+                savedImages = await Promise.all(
+                    selectedImages.map(readFile)
+                )
+            } catch (error) {
+                postMessage.textContent = 'Unable to read the selected images.'
+                postMessage.style.color = 'red'
+                return
+            }
+
+            let newPost = {
+                title: title,
+                content: content,
+                date: new Date().toLocaleString(),
+
+                images: savedImages
+            }
+
+            posts.push(newPost)
+
+            try {
+                localStorage.setItem(
+                    postsStorageKey,
+                    JSON.stringify(posts)
+                )
+            } catch (error) {
+
+                posts.pop()
+
+                postMessage.textContent =
+                    'Unable to save. The images may be too large. Try smaller images.'
+
+                postMessage.style.color = 'red'
+                return
+            }
+
+            displayPosts()
+
+            postForm.reset()
+
+            imagePreview.innerHTML = ''
+
+            postMessage.textContent =
+                'Your post was published successfully!'
+
+            postMessage.style.color = 'green'
+        })
+
+        displayPosts()
+    }
+</script>
